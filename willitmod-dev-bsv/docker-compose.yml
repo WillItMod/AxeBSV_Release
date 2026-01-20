@@ -21,6 +21,8 @@ services:
       RPC_PASSWORD: "${APP_PASSWORD}"
       BSV_RPC_PORT: "8332"
       BSV_P2P_PORT: "8333"
+      BSV_ZMQ_HASHBLOCK_PORT: "28336"
+      PAYOUT_ADDRESS: "CHANGEME_BSV_PAYOUT_ADDRESS"
     command:
       - /bin/sh
       - -ec
@@ -54,10 +56,46 @@ services:
           envsubst < "$$tpl_dir/bitcoin.conf.template" > /data/node/bitcoin.conf
           chown -R 1000:1000 /data/node
         fi
+        if ! grep -qE '^[[:space:]]*minminingtxfee=' /data/node/bitcoin.conf 2>/dev/null; then
+          echo "minminingtxfee=0.000005" >> /data/node/bitcoin.conf
+        fi
+        if ! grep -qE '^[[:space:]]*zmqpubhashblock=' /data/node/bitcoin.conf 2>/dev/null; then
+          echo "zmqpubhashblock=tcp://0.0.0.0:${BSV_ZMQ_HASHBLOCK_PORT}" >> /data/node/bitcoin.conf
+        fi
+        chown 1000:1000 /data/node/bitcoin.conf || true
 
-        if [ ! -f /data/pool/config/ckpool.conf ]; then
+        needs_ckpool_regen=0
+        if [ -f /data/pool/config/ckpool.conf ]; then
+          if ! grep -qE '"btcd"[[:space:]]*:[[:space:]]*\[' /data/pool/config/ckpool.conf; then
+            needs_ckpool_regen=1
+          fi
+          if ! grep -q '"zmqblock"' /data/pool/config/ckpool.conf; then
+            needs_ckpool_regen=1
+          fi
+        else
+          needs_ckpool_regen=1
+        fi
+
+        if [ "$$needs_ckpool_regen" -eq 1 ]; then
+          existing_addr="$$(grep -oE '\"btcaddress\"[[:space:]]*:[[:space:]]*\"[^\"]*\"' /data/pool/config/ckpool.conf 2>/dev/null | head -n 1 | sed -E 's/.*\"btcaddress\"[[:space:]]*:[[:space:]]*\"([^\"]*)\".*/\1/' || true)"
+          if [ -f /data/pool/config/ckpool.conf ]; then
+            mv /data/pool/config/ckpool.conf "/data/pool/config/ckpool.conf.bak.$$(date +%s 2>/dev/null || echo 0)" || true
+          fi
           envsubst < "$$tpl_dir/ckpool.conf.template" > /data/pool/config/ckpool.conf
+          if [ -n "$$existing_addr" ] && [ "$$existing_addr" != "CHANGEME_BSV_PAYOUT_ADDRESS" ]; then
+            tmp="$$(mktemp)"
+            if jq --arg a "$$existing_addr" '.btcaddress=$$a' /data/pool/config/ckpool.conf > "$$tmp" 2>/dev/null; then
+              mv "$$tmp" /data/pool/config/ckpool.conf
+            else
+              rm -f "$$tmp" || true
+            fi
+          fi
           chown -R 1000:1000 /data/pool
+        fi
+
+        if [ ! -f /data/pool/config/ckpool.args ]; then
+          echo "-B" > /data/pool/config/ckpool.args
+          chown 1000:1000 /data/pool/config/ckpool.args || true
         fi
 
         # Apply saved UI settings (if present) to ckpool.conf so payouts go to the configured address.
@@ -91,7 +129,8 @@ services:
 
   ckpool:
     image: ghcr.io/willitmod/docker-ckpool-solo:590fb2a
-    restart: unless-stopped
+    user: "1000:1000"
+    restart: on-failure
     depends_on:
       - bsvd
       - init
@@ -100,20 +139,21 @@ services:
     ports:
       - "8901:3333/tcp"
     volumes:
-      - ${APP_DATA_DIR}/data/pool/config/ckpool.conf:/config/ckpool.conf:ro
-      - ${APP_DATA_DIR}/data/pool/www:/data:rw
+      - ${APP_DATA_DIR}/data/pool/config:/config:ro
+      - ${APP_DATA_DIR}/data/pool/www:/www
     entrypoint:
       - /bin/sh
       - -ec
       - |-
         set -eu
         rm -f /tmp/ckpool/*.pid 2>/dev/null || true
+        ARGS="$(cat /config/ckpool.args 2>/dev/null || true)"
         if command -v ckpool >/dev/null 2>&1; then
-          exec ckpool -k -L -c /config/ckpool.conf
+          exec ckpool -k -L -c /config/ckpool.conf $$ARGS
         elif [ -x /bin/ckpool ]; then
-          exec /bin/ckpool -k -L -c /config/ckpool.conf
+          exec /bin/ckpool -k -L -c /config/ckpool.conf $$ARGS
         elif [ -x /usr/bin/ckpool ]; then
-          exec /usr/bin/ckpool -k -L -c /config/ckpool.conf
+          exec /usr/bin/ckpool -k -L -c /config/ckpool.conf $$ARGS
         else
           echo "ckpool binary not found in image"
           exit 127

@@ -14,6 +14,10 @@ rpcallowip=192.168.0.0/16
 # Bitcoin SV Node mandatory defaults (safe for solo mining)
 excessiveblocksize=1000000000
 maxstackmemoryusageconsensus=100000000
+minminingtxfee=0.000005
+
+# ZMQ (ckpool block notifications)
+zmqpubhashblock=tcp://0.0.0.0:${BSV_ZMQ_HASHBLOCK_PORT}
 
 # Network
 port=${BSV_P2P_PORT}
