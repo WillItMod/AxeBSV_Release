@@ -1,5 +1,5 @@
 manifestVersion: 1
-id: willitmod-dev-bsv
+id: axebsv
 category: bitcoin
 name: AxeBSV
 version: "0.1.6-dev"

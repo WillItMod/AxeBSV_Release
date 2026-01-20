@@ -14,7 +14,7 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data:/data
       - ${APP_DATA_DIR}:/appdata
-      - ./data/templates:/data/templates:ro
+      - ./data/templates:/templates:ro
     environment:
       APPS_SUBNET: "${NETWORK_IP}/16"
       RPC_USER: "bsv"
@@ -28,6 +28,11 @@ services:
         set -eu
 
         apk add --no-cache envsubst curl jq >/dev/null
+
+        tpl_dir="/data/templates"
+        if [ -f "/templates/bitcoin.conf.template" ]; then
+          tpl_dir="/templates"
+        fi
 
         if [ -n "${JWT_SECRET:-}" ]; then
           envfile="/appdata/.env"
@@ -46,12 +51,12 @@ services:
         mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users
 
         if [ ! -f /data/node/bitcoin.conf ]; then
-          envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
+          envsubst < "$$tpl_dir/bitcoin.conf.template" > /data/node/bitcoin.conf
           chown -R 1000:1000 /data/node
         fi
 
         if [ ! -f /data/pool/config/ckpool.conf ]; then
-          envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+          envsubst < "$$tpl_dir/ckpool.conf.template" > /data/pool/config/ckpool.conf
           chown -R 1000:1000 /data/pool
         fi
 
@@ -60,7 +65,7 @@ services:
           addr="$(jq -r '.payoutAddress // empty' /data/ui/state/pool_settings.json 2>/dev/null || true)"
           if [ -n "$$addr" ] && [ -f /data/pool/config/ckpool.conf ]; then
             tmp="$$(mktemp)"
-            if jq --arg a "$$addr" '.btcaddress=$a' /data/pool/config/ckpool.conf > "$$tmp" 2>/dev/null; then
+            if jq --arg a "$$addr" '.btcaddress=$$a' /data/pool/config/ckpool.conf > "$$tmp" 2>/dev/null; then
               mv "$$tmp" /data/pool/config/ckpool.conf
               chown 1000:1000 /data/pool/config/ckpool.conf || true
             else
