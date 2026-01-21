@@ -164,6 +164,8 @@ services:
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
+    ports:
+      - "21216:3000"
     networks:
       default:
         aliases:
