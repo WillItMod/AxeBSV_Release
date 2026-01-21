@@ -8,5 +8,5 @@ The private build repo publishes the UI image to GHCR; the recipe points at that
 
 ## Current status
 
-- DEV store recipe is mirrored into `WillItMod/umbrel-dev-community-store` under `willitmod-dev-bsv/`.
+- AxeBSV is distributed via this repo's store recipe (not mirrored into `WillItMod/umbrel-dev-community-store`).
 - The BSV node image used initially is `bitcoinsv/bitcoin-sv` (amd64 only). arm64 support will be added later via a multi-arch GHCR node image.

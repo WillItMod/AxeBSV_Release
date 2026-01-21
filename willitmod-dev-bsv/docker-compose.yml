@@ -60,7 +60,7 @@ services:
           echo "minminingtxfee=0.000005" >> /data/node/bitcoin.conf
         fi
         if ! grep -qE '^[[:space:]]*zmqpubhashblock=' /data/node/bitcoin.conf 2>/dev/null; then
-          echo "zmqpubhashblock=tcp://0.0.0.0:${BSV_ZMQ_HASHBLOCK_PORT}" >> /data/node/bitcoin.conf
+          echo "zmqpubhashblock=tcp://0.0.0.0:$${BSV_ZMQ_HASHBLOCK_PORT}" >> /data/node/bitcoin.conf
         fi
         chown 1000:1000 /data/node/bitcoin.conf || true
 
@@ -178,6 +178,8 @@ services:
       STATIC_DIR: "/app/static"
       APP_CHANNEL: "DEV"
       APP_VERSION_SUFFIX: "-dev"
+      BSVD_IMAGE: "bitcoinsv/bitcoin-sv:1.2.0"
+      CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
       BSV_RPC_HOST: "bsvd"
       BSV_RPC_PORT: "8332"
       BSV_RPC_USER: "bsv"
