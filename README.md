@@ -1,6 +1,6 @@
 # AxeBSV Release (public)
 
-This repo contains the **public** Umbrel/5tratumOS recipe files for AxeBSV.
+This repo contains the **public** app recipe files for AxeBSV (built for 5tratumOS and compatible self-hosted app platforms).
 
 It must **not** contain any application source code.
 

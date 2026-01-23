@@ -2,14 +2,14 @@ manifestVersion: 1
 id: axebsv
 category: bitcoin
 name: AxeBSV
-version: "0.7.149-dev"
+version: "0.7.150-dev"
 tagline: BSV node + solo pool
 description: >-
   Run a Bitcoin SV full node and a solo Stratum v1 pool (ckpool) as a single app.
 
 
   Miner connection:
-    - URL: `stratum+tcp://<your-umbrel-ip>:8901`
+    - URL: `stratum+tcp://<your-host-ip>:8901`
     - Username: worker name (optional)
     - Password: anything
 
