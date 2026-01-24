@@ -130,7 +130,8 @@ services:
         fi
 
   bsvd:
-    image: ghcr.io/willitmod/bitcoin-sv:1.1.1
+    image: bitcoinsv/bitcoin-sv:1.2.0
+    user: "1000:1000"
     restart: unless-stopped
     depends_on:
       init:
@@ -139,8 +140,9 @@ services:
       - "8333:8333/tcp"
     volumes:
       - ${APP_DATA_DIR}/data/node:/data
-    command:
+    entrypoint:
       - bitcoind
+    command:
       - -datadir=/data
       - -conf=/data/bitcoin.conf
 
@@ -177,7 +179,7 @@ services:
         fi
 
   app:
-    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.159
+    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.160
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
@@ -197,7 +199,7 @@ services:
       STATIC_DIR: "/app/static"
       APP_CHANNEL: "DEV"
       APP_VERSION_SUFFIX: "-dev"
-      BSVD_IMAGE: "ghcr.io/willitmod/bitcoin-sv:1.1.1"
+      BSVD_IMAGE: "bitcoinsv/bitcoin-sv:1.2.0"
       CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
       BSV_RPC_HOST: "bsvd"
       BSV_RPC_PORT: "8332"
