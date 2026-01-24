@@ -2,7 +2,7 @@ manifestVersion: 1
 id: axebsv
 category: bitcoin
 name: AxeBSV
-version: "0.7.153-dev"
+version: "0.7.154-dev"
 tagline: BSV node + solo pool
 description: >-
   Run a Bitcoin SV full node and a solo Stratum v1 pool (ckpool) as a single app.
