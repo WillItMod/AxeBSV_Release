@@ -113,7 +113,7 @@ services:
         fi
 
   bsvd:
-    image: bitcoinsv/bitcoin-sv:1.2.0
+    image: bitcoinsv/bitcoin-sv:1.1.1
     restart: unless-stopped
     depends_on:
       init:
@@ -180,7 +180,7 @@ services:
       STATIC_DIR: "/app/static"
       APP_CHANNEL: "DEV"
       APP_VERSION_SUFFIX: "-dev"
-      BSVD_IMAGE: "bitcoinsv/bitcoin-sv:1.2.0"
+      BSVD_IMAGE: "bitcoinsv/bitcoin-sv:1.1.1"
       CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
       BSV_RPC_HOST: "bsvd"
       BSV_RPC_PORT: "8332"
